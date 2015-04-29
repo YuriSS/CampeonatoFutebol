@@ -1,98 +1,141 @@
 #define TAM 20
 
 
-/* [INI] Estrutura de Dados */
+/* [INI]
+ * Dados das Equipes */
 typedef struct Equipe {
 	int codigo;
-	int golsMarcados;
-	int golsSofridos;
-	int saldoGols;
+	int gols;
+	int saldoGol;
 	int pontuacao;
-
 } Equipe;
 
-
-
-typedef struct Champs {
-	char nome[31];
-	Equipe* champ[TAM];	
-
-} Champs;
-/* [FIM] Estrutura de Dados */
-
-
-
-/* [INI] Inicializadores */
-Equipe* novaEquipe(int codigo) {
-	Equipe* nova = (Equipe *)malloc(sizeof(Equipe));
+Equipe *novaEquipe(int codigo) {
+	Equipe *nova = (Equipe *)malloc(sizeof(Equipe));
 	nova->codigo = codigo;
-	nova->golsMarcados = nova->golsSofridos = nova->saldoGols = nova->pontuacao = 0;
+	nova->gols = nova->saldoGol = nova->pontuacao = 0;
 	return nova;
-
 }
+/* [FIM] */
 
-Champs* novoChamp(char nome[31]) {
-	Champs* novo = (Champs*)malloc(sizeof(Champs));
+
+
+/* [INI]
+ * Dados do Campeonato */
+typedef struct Champs {
+	char nome[21];
+	Equipe *times[TAM];
+	int quant;
+} Champs;
+
+Champs *novaChamps(char nome[21]) {
+	Champs *novo = (Champs *)malloc(sizeof(Champs));
 	strcpy(novo->nome, nome);
-	int i;
-	for(i=0; i<TAM; i++) {
-		novo->champ[i] = NULL;
-	}
+	novo->quant = 0;
 	return novo;
-
 }
-/* [FIM] Inicializadores */
+/* [FIM] */
 
 
 
-/* [INI] Insercao */
+/* [INI]
+ * Procura se existe equipe igual
+ * Retorno: retorna a posição caso sim, -1 caso não */
 int search(Champs *c, int codigo) {
-
-	int i = 0;
-	while(c->champ[i]) {
-		if(c->champ[i]->codigo == codigo) {
-			return 1;
+	int i;
+	for(i=0; i<c->quant; i++) {
+		if(c->times[i]->codigo == codigo) {
+			return i;
 		}
-		i++;
 	}
-	return 0;
-
+	return -1;
 }
+/* [FIM] */
 
 
 
+/* [INI]
+ * Faz a inserção de um novo times */
 int push(Champs *c, int codigo) {
-	if(!(search(c, codigo))) {
-		int i = 0, flag = 0;
-		while(c->champ[i] && i > 0 && flag == 0) {
-			printf("veio");
-			if(c->champ[i] == NULL) {
-				c->champ[i] = novaEquipe(codigo);
-				flag = 1;
-			}
-			i++;
-		}	
+	if(search(c, codigo) == -1) {
+		c->times[c->quant] = novaEquipe(codigo);
+		c->quant++;
+		return 1;
 	}
 	return 0;
-
 }
-/* [FIM] Insercao */
+/* [FIM] */
 
 
 
-/* [INI] Impressao */
-void print(Champs *c) {
-	int i = 0;
-	printf("---> Campeonato %s\n\n", c->nome);
-	while(c->champ[i]) {
-		printf("Equipe: %d\n", c->champ[i]->codigo);
-		printf("Gols Marcados: %d\n", c->champ[i]->golsMarcados);
-		printf("Gols Sofridos: %d\n", c->champ[i]->golsSofridos);
-		printf("Saldo de Gols: %d\n", c->champ[i]->saldoGols);
-		printf("Pontuacao: %d\n", c->champ[i]->pontuacao);
-		printf("===================================================");
-		i++;
+/* [INI]
+ * Faz a impressão do vetor de Equipes */
+void toString(Champs *c) {
+	printf("-> Campeonato %s:\n", c->nome);
+	int i;
+	for(i=0; i<c->quant; i++) {
+		printf("==============================================\n");
+		printf("Equipe %d\n", c->times[i]->codigo);
+		printf("%d pontos\n", c->times[i]->pontuacao);
+		printf("%d saldo de gols\n", c->times[i]->saldoGol);
 	}
-
+	printf("/////////////////////////////////////////////\n");
 }
-/* [FIM] Impressao */
+/* [FIM] */
+
+
+
+/* [INI]
+ * Faz esquema de partida
+ * Coloca pontuaca em cada equipe e ajusta o saldo de gols */
+void partida(Champs *c, int codigoTime_1, int golTime_1, int codigoTime_2, int golTime_2) {
+	int indexTime_1 = search(c, codigoTime_1),
+		indexTime_2 = search(c, codigoTime_2);
+	if(golTime_1 > golTime_2) {
+		c->times[indexTime_1]->pontuacao += 3;
+	} else if(golTime_1 < golTime_2) {
+		c->times[indexTime_2]->pontuacao += 3;
+	} else {
+		c->times[indexTime_1]->pontuacao += 1;
+		c->times[indexTime_2]->pontuacao += 1;
+	}
+	c->times[indexTime_1]->gols += golTime_1;
+	c->times[indexTime_1]->saldoGol = c->times[indexTime_1]->gols - golTime_2;
+	c->times[indexTime_2]->gols += golTime_2;
+	c->times[indexTime_2]->saldoGol = c->times[indexTime_2]->gols - golTime_1;
+}
+/* [FIM] */
+
+
+
+/* [INI]
+ * Reordena vetor com o ranking das equipes
+ * Ideal para ser usado a cada nova partida ou a cada nova inserção */
+void troca(Champs *c, int index, int novoIndex) {
+	Equipe *aux = c->times[novoIndex];
+	c->times[novoIndex] = c->times[index];
+	c->times[index] = aux;
+}
+
+void ranking(Champs *c, int index) {
+	if(index > 0 && c->times[index]->pontuacao >= c->times[index-1]->pontuacao) {
+		if(c->times[index]->pontuacao == c->times[index-1]->pontuacao
+				&& c->times[index]->saldoGol > c->times[index-1]->saldoGol) {
+			troca(c, index, (index-1));
+			ranking(c, (index-1));
+		} else {
+			troca(c, index, (index-1));
+			ranking(c, (index-1));
+		}
+	} else if(index < c->quant - 1 && c->times[index]->pontuacao < c->times[index+1]->pontuacao) {
+		if(c->times[index]->pontuacao == c->times[index+1]->pontuacao
+				&& c->times[index]->saldoGol > c->times[index+1]->saldoGol) {
+			troca(c, index, (index-1));
+			ranking(c, (index-1));
+		} else {
+			troca(c, index, (index-1));
+			ranking(c, (index-1));
+		}
+	}
+}
+/* [FIM] */
