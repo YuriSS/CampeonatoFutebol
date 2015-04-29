@@ -1,17 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "equipes.h"
+
+#include "champs.h"
+
 
 int main() {
-	Champs* br = novoChamp("Brasileiro");
-	push(br, 400);
-	push(br, 401);
-	push(br, 401);
+	Champs *bra = novaChamps("Brasileirao");
+	push(bra, 300);
+	push(bra, 301);
+	partida(bra, 301, 1, 300, 2);
+	ranking(bra, search(bra, 300));
+	ranking(bra, search(bra, 301));
+	push(bra, 302);
+	push(bra, 303);
+	partida(bra, 302, 2, 303, 0);
+	ranking(bra, search(bra, 302));
+	ranking(bra, search(bra, 303));
+	toString(bra);
 
-	printf("\n\n");
-	print(br);
-	printf("\n\n");
+	printf("\n%d\n", bra->quant);
 
 	return 0;
 }
