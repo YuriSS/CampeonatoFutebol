@@ -10,15 +10,14 @@ Um campeonato de futebol está ocorrendo e é necessário armazenar dados sobre 
 
 Os dados, que devem ser fornecidos via arquivo texto, têm o seguinte formato: primeiramente indica-se a quantidade E de equipes participantes (2 <= E <= 20). Cada equipe tem uma identificação numérica sequencial, entre 401 e 400 + E. Em seguida, são descritas inúmeras partidas P (1 <= P <= 500), cada uma delas contendo 4 valores X, Y, Z, W. X e Z indicam equipes, enquanto Y e W indicam a quantidade de gols que X e Z, respectivamente, marcaram na partida. Um fim de arquivo é usado para indicar o final das entradas.
 
-Ex.:
-
-3     // 3 equipes participam
-401 2 402 0    // eq. 401 fez 2 a 0 na eq. 402
-403 1 401 1   // eq. 403 empatou em 1 a 1 com eq. 401
-402 1 403 4
-402 2 401 0
-401 1 403 0
-403 2 402 2 
+Ex.:<br>
+3     // 3 equipes participam<br>
+401 2 402 0    // eq. 401 fez 2 a 0 na eq. 402<br>
+403 1 401 1   // eq. 403 empatou em 1 a 1 com eq. 401<br>
+402 1 403 4<br>
+402 2 401 0<br>
+401 1 403 0<br>
+403 2 402 2<br><br>
 
 A saída deve conter os números de identificação das equipes, em ordem, considerando os seguintes critérios: a) número de pontos; b) saldo de gols; c) número de gols marcados. Caso haja empate nos 3 critérios, a equipe com menor identificação numérica deve ser mostrada primeiro.
 
