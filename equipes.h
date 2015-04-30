@@ -44,13 +44,13 @@ void toString(Champs *c) {
 	printf("\n\n-> Campeonato %s:\n", c->nome);
 	int i;
 	for(i=0; i<c->quant; i++) {
-		printf("==============================================\n");
-		printf("Equipe %d\n", c->times[i]->codigo);
-		printf("%d pontos\n", c->times[i]->pontuacao);
-		printf("%d gols\n", c->times[i]->gols);
-		printf("%d saldo de gols\n", c->times[i]->saldoGol);
+		printf("\n\t%d. Posicao\n", i+1);
+		printf("\t\tEquipe %d\n", c->times[i]->codigo);
+		printf("\t\t%d pontos\n", c->times[i]->pontuacao);
+		printf("\t\t%d gols\n", c->times[i]->gols);
+		printf("\t\t%d saldo de gols\n", c->times[i]->saldoGol);
+		printf("\n==============================================\n");
 	}
-	printf("==============================================\n\n");
 }
 /* [FIM] */
 
@@ -66,31 +66,31 @@ void troca(Champs *c, int index, int novoIndex) {
 }
 
 int verifCodigo(Champs *c, int index, int novoIndex) {
-	return (c->times[index]->codigo > c->times[novoIndex]->codigo) ? 1 : 0;
+	return (c->times[index]->codigo > c->times[novoIndex]->codigo) ? 0 : 1;
 }
 
 int verifGolsIgual(Champs *c, int index, int novoIndex) {
-	return (c->times[index]->gols == c->times[novoIndex]->gols) ? verifCodigo(c, index, novoIndex) : 0;
+	return (c->times[index]->gols == c->times[novoIndex]->gols) ? verifCodigo(c, index, novoIndex) : 1;
 }
 int verifGols(Champs *c, int index, int novoIndex) {
-	return (c->times[index]->gols >= c->times[novoIndex]->gols) ? verifGolsIgual(c, index, novoIndex) : 1;
+	return (c->times[index]->gols >= c->times[novoIndex]->gols) ? verifGolsIgual(c, index, novoIndex) : 0;
 }
 
 int verifSaldoGolIgual(Champs *c, int index, int novoIndex) {
-	return (c->times[index]->saldoGol == c->times[novoIndex]->saldoGol) ? verifGols(c, index, novoIndex) : 0;
+	return (c->times[index]->saldoGol == c->times[novoIndex]->saldoGol) ? verifGols(c, index, novoIndex) : 1;
 }
 int verfSaldoGol(Champs *c, int index, int novoIndex) {
-	return (c->times[index]->saldoGol >= c->times[novoIndex]->saldoGol) ? verifSaldoGolIgual(c, index, novoIndex) : 1;
+	return (c->times[index]->saldoGol >= c->times[novoIndex]->saldoGol) ? verifSaldoGolIgual(c, index, novoIndex) : 0;
 }
 
 int verfPontuacao(Champs *c, int index, int novoIndex) {
-	return (c->times[index]->pontuacao == c->times[novoIndex]->pontuacao) ? verfSaldoGol(c, index, novoIndex) : 0;
+	return (c->times[index]->pontuacao == c->times[novoIndex]->pontuacao) ? verfSaldoGol(c, index, novoIndex) : 1;
 }
 
 void ranking(Champs *c, int index) {
 	int novoIndex = index - 1;
 	if(index > 0 && c->times[index]->pontuacao >= c->times[novoIndex]->pontuacao) {
-		if(verfPontuacao(c, index, novoIndex) == 0) {
+		if(verfPontuacao(c, index, novoIndex) == 1) {
 			troca(c, index, novoIndex);
 			ranking(c, novoIndex);
 		}
@@ -117,7 +117,7 @@ int search(Champs *c, int codigo) {
 
 
 /* [INI]
- * Faz a inserção de um novo time, caso ja tenha, exclui e insere no final do array */
+ * Faz a inserção de um novo time no final do array, caso ja tenha o time exclui e insere no final do array */
 void pop(Champs *c, int index) {
 	int j=c->quant-1;
 	for(; index<j; index++) {
