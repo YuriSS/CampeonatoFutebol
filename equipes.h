@@ -39,6 +39,68 @@ Champs *novaChamps(char nome[21]) {
 
 
 /* [INI]
+ * Faz a impressão do vetor de Equipes */
+void toString(Champs *c) {
+	printf("\n\n-> Campeonato %s:\n", c->nome);
+	int i;
+	for(i=0; i<c->quant; i++) {
+		printf("==============================================\n");
+		printf("Equipe %d\n", c->times[i]->codigo);
+		printf("%d pontos\n", c->times[i]->pontuacao);
+		printf("%d gols\n", c->times[i]->gols);
+		printf("%d saldo de gols\n", c->times[i]->saldoGol);
+	}
+	printf("==============================================\n\n");
+}
+/* [FIM] */
+
+
+
+/* [INI]
+ * Reordena vetor com o ranking das equipes
+ * Ideal para ser usado a cada nova partida ou a cada nova inserção com cada equipe */
+void troca(Champs *c, int index, int novoIndex) {
+	Equipe *aux = c->times[novoIndex];
+	c->times[novoIndex] = c->times[index];
+	c->times[index] = aux;
+}
+
+int verifCodigo(Champs *c, int index, int novoIndex) {
+	return (c->times[index]->codigo > c->times[novoIndex]->codigo) ? 1 : 0;
+}
+
+int verifGolsIgual(Champs *c, int index, int novoIndex) {
+	return (c->times[index]->gols == c->times[novoIndex]->gols) ? verifCodigo(c, index, novoIndex) : 0;
+}
+int verifGols(Champs *c, int index, int novoIndex) {
+	return (c->times[index]->gols >= c->times[novoIndex]->gols) ? verifGolsIgual(c, index, novoIndex) : 1;
+}
+
+int verifSaldoGolIgual(Champs *c, int index, int novoIndex) {
+	return (c->times[index]->saldoGol == c->times[novoIndex]->saldoGol) ? verifGols(c, index, novoIndex) : 0;
+}
+int verfSaldoGol(Champs *c, int index, int novoIndex) {
+	return (c->times[index]->saldoGol >= c->times[novoIndex]->saldoGol) ? verifSaldoGolIgual(c, index, novoIndex) : 1;
+}
+
+int verfPontuacao(Champs *c, int index, int novoIndex) {
+	return (c->times[index]->pontuacao == c->times[novoIndex]->pontuacao) ? verfSaldoGol(c, index, novoIndex) : 0;
+}
+
+void ranking(Champs *c, int index) {
+	int novoIndex = index - 1;
+	if(index > 0 && c->times[index]->pontuacao >= c->times[novoIndex]->pontuacao) {
+		if(verfPontuacao(c, index, novoIndex) == 0) {
+			troca(c, index, novoIndex);
+			ranking(c, novoIndex);
+		}
+	}
+}
+/* [FIM] */
+
+
+
+/* [INI]
  * Procura se existe equipe igual
  * Retorno: retorna a posição caso sim, -1 caso não */
 int search(Champs *c, int codigo) {
@@ -55,31 +117,26 @@ int search(Champs *c, int codigo) {
 
 
 /* [INI]
- * Faz a inserção de um novo times */
-int push(Champs *c, int codigo) {
-	if(search(c, codigo) == -1) {
-		c->times[c->quant] = novaEquipe(codigo);
-		c->quant++;
-		return 1;
+ * Faz a inserção de um novo time, caso ja tenha, exclui e insere no final do array */
+void pop(Champs *c, int index) {
+	int j=c->quant-1;
+	for(; index<j; index++) {
+		c->times[index] = c->times[index+1];
 	}
-	return 0;
+	c->quant--;
 }
-/* [FIM] */
 
-
-
-/* [INI]
- * Faz a impressão do vetor de Equipes */
-void toString(Champs *c) {
-	printf("\n\n-> Campeonato %s:\n", c->nome);
-	int i;
-	for(i=0; i<c->quant; i++) {
-		printf("==============================================\n");
-		printf("Equipe %d\n", c->times[i]->codigo);
-		printf("%d pontos\n", c->times[i]->pontuacao);
-		printf("%d saldo de gols\n", c->times[i]->saldoGol);
+void push(Champs *c, Equipe *e) {
+	int index = search(c, e->codigo);
+	if(index != -1) {
+		e->gols += c->times[index]->gols;
+		e->pontuacao += c->times[index]->pontuacao;
+		e->saldoGol = c->times[index]->saldoGol + e->saldoGol;
+		pop(c, index);
 	}
-	printf("==============================================\n\n");
+	c->times[c->quant] = e;
+	c->quant++;
+	ranking(c, c->quant-1);
 }
 /* [FIM] */
 
@@ -89,115 +146,21 @@ void toString(Champs *c) {
  * Faz esquema de partida
  * Coloca pontuaca em cada equipe e ajusta o saldo de gols */
 void partida(Champs *c, int codigoTime_1, int golTime_1, int codigoTime_2, int golTime_2) {
-	int indexTime_1 = search(c, codigoTime_1),
-		indexTime_2 = search(c, codigoTime_2);
+	Equipe  *time_1 = novaEquipe(codigoTime_1),
+			*time_2 = novaEquipe(codigoTime_2);
 	if(golTime_1 > golTime_2) {
-		c->times[indexTime_1]->pontuacao += 3;
+		time_1->pontuacao += 3;
 	} else if(golTime_1 < golTime_2) {
-		c->times[indexTime_2]->pontuacao += 3;
+		time_2->pontuacao += 3;
 	} else {
-		c->times[indexTime_1]->pontuacao += 1;
-		c->times[indexTime_2]->pontuacao += 1;
+		time_1->pontuacao += 1;
+		time_2->pontuacao += 1;
 	}
-	c->times[indexTime_1]->gols += golTime_1;
-	c->times[indexTime_1]->saldoGol = c->times[indexTime_1]->gols - golTime_2;
-	c->times[indexTime_2]->gols += golTime_2;
-	c->times[indexTime_2]->saldoGol = c->times[indexTime_2]->gols - golTime_1;
+	time_1->gols += golTime_1;
+	time_1->saldoGol = time_1->gols - golTime_2;
+	time_2->gols += golTime_2;
+	time_2->saldoGol = time_2->gols - golTime_1;
+	push(c, time_1);
+	push(c, time_2);
 }
-/* [FIM] */
-
-
-
-/* [INI]
- * Reordena vetor com o ranking das equipes
- * Ideal para ser usado a cada nova partida ou a cada nova inserção */
-void troca(Champs *c, int index, int novoIndex) {
-	Equipe *aux = c->times[novoIndex];
-	c->times[novoIndex] = c->times[index];
-	c->times[index] = aux;
-}
-
-int verfPontuacao(Champs *c, int index, int novoIndex) {
-	return (c->times[index]->pontuacao == c->times[novoIndex]->pontuacao) ? 1 : 0;
-}
-int verfSaldoGolMaior(Champs *c, int index, int novoIndex) {
-	return (c->times[index]->saldoGol >= c->times[novoIndex]->saldoGol) ? 1 : 0;
-}
-int verifSaldoGolIgual(Champs *c, int index, int novoIndex) {
-	return (c->times[index]->saldoGol == c->times[novoIndex]->saldoGol) ? 1 : 0;
-}
-int verifGolsMaior(Champs *c, int index, int novoIndex) {
-	return (c->times[index]->gols >= c->times[novoIndex]->gols) ? 1 : 0;
-}
-int verifGolsIgual(Champs *c, int index, int novoIndex) {
-	return (c->times[index]->gols == c->times[novoIndex]->gols) ? 1 : 0;
-}
-int verifCodigo(Champs *c, int index, int novoIndex) {
-	return (c->times[index]->codigo < c->times[novoIndex]->codigo) ? 1 : 0;
-}
-
-void ranking(Champs *c, int index) {
-	if(index > 0 && c->times[index]->pontuacao >= c->times[index-1]->pontuacao) {
-		int novoIndex = index - 1;
-		if(verfPontuacao(c, index, novoIndex)) {
-			if(verfSaldoGolMaior(c, index, novoIndex)) {
-				if(verifSaldoGolIgual(c, index, novoIndex)) {
-					if(verifGolsMaior(c, index, novoIndex)) {
-						if(verifGolsIgual(c, index, novoIndex)) {
-							if(verifCodigo(c, index, novoIndex)) {
-								troca(c, index, novoIndex);
-								ranking(c, novoIndex);
-							}
-						} else {
-							troca(c, index, novoIndex);
-							ranking(c, novoIndex);
-						}
-					} else {
-						troca(c, index, novoIndex);
-						ranking(c, novoIndex);
-					}
-				} else {
-					troca(c, index, novoIndex);
-					ranking(c, novoIndex);
-				}
-			} else {
-				troca(c, index, novoIndex);
-				ranking(c, novoIndex);
-			}
-		} else {
-			troca(c, index, novoIndex);
-			ranking(c, novoIndex);
-		}
-	}
-}
-
-/*
-void ranking(Champs *c, int index) {
-	if(index > 0 && c->times[index]->pontuacao >= c->times[index-1]->pontuacao) {
-		if(c->times[index]->pontuacao == c->times[index-1]->pontuacao) {
-			if(c->times[index]->saldoGol >= c->times[index-1]->saldoGol) {
-				if(c->times[index]->saldoGol == c->times[index-1]->saldoGol) {
-
-				} else {
-					troca(c, index, (index-1));
-					ranking(c, (index-1));
-				}
-			}
-		} else {
-			troca(c, index, (index-1));
-			ranking(c, (index-1));
-		}
-	} else if(index < c->quant - 1 && c->times[index]->pontuacao < c->times[index+1]->pontuacao) {
-		if(c->times[index]->pontuacao == c->times[index+1]->pontuacao) {
-			if(c->times[index]->saldoGol < c->times[index+1]->saldoGol) {
-				troca(c, index, (index+1));
-				ranking(c, (index+1));
-			}
-		} else {
-			troca(c, index, (index+1));
-			ranking(c, (index+1));
-		}
-	}
-}
-*/
 /* [FIM] */
